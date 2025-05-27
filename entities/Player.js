@@ -6,6 +6,7 @@ class Player {
         this.y = Math.random() * canvas.height;
         this.size = 25;
         this.speed = 10;
+        this.color = '#EB5E28';
     }
     update() {
         if (keys.up) this.y -= this.speed;
@@ -17,7 +18,7 @@ class Player {
         this.y = Math.max(0, Math.min(this.y, canvas.height - this.size));
     }
     draw() {
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.size, this.size);
     }
 }
