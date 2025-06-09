@@ -30,7 +30,7 @@ export class MazeGenerator {
         this.currentCell = previousCell;
       } else break;
     }
-    // this.removeCandidateWalls();
+    this.removeCandidateWalls();
   }
 
   selectUnvisitedNeighborCell(cell) {
@@ -90,8 +90,8 @@ export class MazeGenerator {
     }
 
     const percentage = 0.2; //20%
-    // const removals = Math.floor(Math.random() * (candidates.length * percentage));
-    const removals = Math.floor(candidates.length * percentage);
+    const removals = Math.floor(Math.random() * (candidates.length * percentage));
+    // const removals = Math.floor(candidates.length * percentage);
 
     //each index has a pair {currentCell,neighbourCell}
     for (let i = 0; i < removals; i++) {
