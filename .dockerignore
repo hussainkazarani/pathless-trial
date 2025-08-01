@@ -1,0 +1,8 @@
+backend/node_modules/
+.gitignore
+.git
+.gitattributes
+.prettierrc
+/database/
+README.md
+

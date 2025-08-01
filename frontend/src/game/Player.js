@@ -1,18 +1,33 @@
 import { keys } from "../ui/input/keybindings.js";
+
 export class Player {
   constructor(maze, collisionManager) {
-    const row = Math.floor(Math.random() * maze.cellsMatrix.length);
-    const col = Math.floor(Math.random() * maze.cellsMatrix[0].length);
-    this.color = "#EB5E28";
-    this.speed = 5;
-    this.playerSize = 25;
     this.cellSize = maze.cellsMatrix[0][0].size;
     this.collisionManager = collisionManager;
-    this.playerCurrentCell = maze.cellsMatrix[row][col];
-    this.x = this.playerCurrentCell.x * this.cellSize;
-    this.y = this.playerCurrentCell.y * this.cellSize;
+
+    // default values
+    this.x = 0;
+    this.y = 0;
+    this.color = "#EB5E28";
+    this.speed = 7;
+    this.playerSize = 35;
+    this.flags = 0;
+    this.playerCurrentCell = null;
   }
 
+  loadData(playerData) {
+    this.x = playerData.x;
+    this.y = playerData.y;
+    this.playerSize = playerData.size;
+    this.flags = playerData.flags;
+    this.color = playerData.color;
+    this.speed = playerData.speed;
+    this.playerCurrentCell = playerData.currentCell;
+  }
+
+  updateFlagsInPlayer(newFlags) {
+    this.flags = newFlags;
+  }
   draw(ctx) {
     ctx.fillStyle = this.color;
     ctx.fillRect(this.x, this.y, this.playerSize, this.playerSize);
@@ -22,11 +37,22 @@ export class Player {
     const col = Math.floor(this.x / this.cellSize);
     const row = Math.floor(this.y / this.cellSize);
     this.playerCurrentCell = this.collisionManager.maze.cellsMatrix[row][col];
+    // console.log(this.playerCurrentCell);
   }
 
   getCell(x, y) {
     const col = Math.floor(x / this.cellSize);
     const row = Math.floor(y / this.cellSize);
+
+    if (
+      row < 0 ||
+      row >= this.collisionManager.maze.cellsMatrix.length ||
+      col < 0 ||
+      col >= this.collisionManager.maze.cellsMatrix[0].length
+    ) {
+      //   console.log("Out of bounds, returning null");
+      return null;
+    }
     return this.collisionManager.maze.cellsMatrix[row][col];
   }
 
@@ -40,13 +66,19 @@ export class Player {
       bottomRight: { x: this.x + playerSize, y: this.y + playerSize },
     };
 
+    // constraints on maze
+    const maxX = this.collisionManager.maze.cellsMatrix[0].length * this.cellSize - this.playerSize;
+    const maxY = this.collisionManager.maze.cellsMatrix.length * this.cellSize - this.playerSize;
+    // this.x = Math.max(0, Math.min(this.x, maxX - playerSize));
+    // this.y = Math.max(0, Math.min(this.y, maxY - playerSize));
+
     if (keys.up) {
-      const next = this.y - this.speed;
+      const next = Math.max(0, this.y - this.speed);
       let wall = null;
       const cell1 = this.getCell(corners.topLeft.x, corners.topLeft.y);
       const cell2 = this.getCell(corners.topRight.x - 1, corners.topRight.y);
 
-      if (cell1?.walls[0]) wall = cell1.y * cellSize;
+      if (cell1?.walls[0]) wall = cell1.y * cellSize + 1; //+1 for not cramping into wall
       if (cell2?.walls[0]) {
         const boundary = cell2.y * cellSize;
         wall = wall === null ? boundary : Math.max(wall, boundary);
@@ -57,7 +89,7 @@ export class Player {
       const cellAboveRight = this.getCell(corners.topRight.x - 1, next);
       if (cellAboveLeft && cellAboveRight && cellAboveLeft !== cellAboveRight) {
         if (cellAboveLeft.walls[1] || cellAboveRight.walls[3]) {
-          console.log("vertical case");
+          //   console.log("vertical case");
           const blockingCellY = Math.max(cellAboveLeft.y, cellAboveRight.y);
           wall = (blockingCellY + 1) * cellSize;
         }
@@ -68,7 +100,7 @@ export class Player {
     }
 
     if (keys.right) {
-      const next = this.x + this.speed;
+      const next = Math.min(maxX, this.x + this.speed);
       let wall = null;
       const cell1 = this.getCell(corners.topRight.x - 1, corners.topRight.y);
       const cell2 = this.getCell(corners.bottomRight.x - 1, corners.bottomRight.y - 1);
@@ -84,7 +116,7 @@ export class Player {
       const cellRightBottom = this.getCell(next + playerSize, corners.bottomRight.y - 1);
       if (cellRightTop && cellRightBottom && cellRightTop !== cellRightBottom) {
         if (cellRightTop.walls[2] || cellRightBottom.walls[0]) {
-          console.log("horizontal case");
+          //   console.log("horizontal case");
           const blockingCellX = Math.min(cellRightTop.x, cellRightBottom.x);
           wall = blockingCellX * cellSize - playerSize;
         }
@@ -95,7 +127,7 @@ export class Player {
     }
 
     if (keys.down) {
-      const next = this.y + this.speed;
+      const next = Math.min(maxY, this.y + this.speed);
       let wall = null;
       const cell1 = this.getCell(corners.bottomLeft.x, corners.bottomLeft.y - 1);
       const cell2 = this.getCell(corners.bottomRight.x - 1, corners.bottomRight.y - 1);
@@ -111,7 +143,7 @@ export class Player {
       const cellBelowRight = this.getCell(corners.bottomRight.x - 1, next + playerSize);
       if (cellBelowLeft && cellBelowRight && cellBelowLeft !== cellBelowRight) {
         if (cellBelowLeft.walls[1] || cellBelowRight.walls[3]) {
-          console.log("vertical case");
+          //   console.log("vertical case");
           const blockingCellY = Math.min(cellBelowLeft.y, cellBelowRight.y);
           wall = blockingCellY * cellSize - playerSize;
         }
@@ -123,11 +155,11 @@ export class Player {
     }
 
     if (keys.left) {
-      const next = this.x - this.speed;
+      const next = Math.max(0, this.x - this.speed);
       let wall = null;
       const cell1 = this.getCell(corners.topLeft.x, corners.topLeft.y);
       const cell2 = this.getCell(corners.bottomLeft.x, corners.bottomLeft.y - 1);
-      if (cell1?.walls[3]) wall = cell1.x * cellSize;
+      if (cell1?.walls[3]) wall = cell1.x * cellSize + 1; //+1 for not cramping into wall
       if (cell2?.walls[3]) {
         const boundary = cell2.x * cellSize;
         wall = wall === null ? boundary : Math.max(wall, boundary);
@@ -138,7 +170,7 @@ export class Player {
       const cellLeftBottom = this.getCell(next, corners.bottomLeft.y - 1);
       if (cellLeftTop && cellLeftBottom && cellLeftTop !== cellLeftBottom) {
         if (cellLeftTop.walls[2] || cellLeftBottom.walls[0]) {
-          console.log("horizontal case");
+          //   console.log("horizontal case");
           const blockingCellX = Math.max(cellLeftTop.x, cellLeftBottom.x);
           wall = (blockingCellX + 1) * cellSize;
         }
@@ -148,8 +180,36 @@ export class Player {
     }
   }
 
-  //   to constraint the player inside the canvas for irregular co-ordinates
-  //   this.x = Math.max(0, Math.min(this.x, canvas.width - this.size));
-  //   this.y = Math.max(0, Math.min(this.y, canvas.height - this.size));
-  //   console.log("wallY is nottt null, nextY = ", nextY, " wallY = ", wallY)
+  //   checkFlagCollision() {
+  //     if (this.flag.isFlagCollected) return;
+  //     let playerSize = this.playerSize;
+  //     let flagSize = this.flag.location.size;
+  //     let flag = this.flag;
+  //     let corners = {
+  //       lowX: this.x,
+  //       lowY: this.y,
+  //       highX: this.x + playerSize,
+  //       highY: this.y + playerSize,
+  //     };
+  //     let flagBounds = {
+  //       lowX: flag.location.x * flagSize,
+  //       lowY: flag.location.y * flagSize,
+  //       //here the multiplication is to get the correct place in grid, then to get the right end of flag
+  //       highX: flag.location.x * flagSize + flagSize,
+  //       highY: flag.location.y * flagSize + flagSize,
+  //     };
+
+  //     if (
+  //       corners.highX >= flagBounds.lowX &&
+  //       corners.lowX <= flagBounds.highX &&
+  //       corners.highY >= flagBounds.lowY &&
+  //       corners.lowY <= flagBounds.highY
+  //     ) {
+  //       //   console.log("corners", corners.lowX, ", ", corners.lowY, ", ", corners.highX, ", ", corners.highY, "\n");
+  //       //   console.log("flagBounds", flagBounds.lowX, ", ", flagBounds.lowY, ", ", flagBounds.highX, ", ", flagBounds.highY);
+  //       this.flagsCollected++;
+  //       //   console.log(this.flagsCollected);
+  //       flag.isFlagCollected = true;
+  //     }
+  //   }
 }

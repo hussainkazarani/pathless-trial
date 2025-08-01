@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "description": "welcome to pathless trails! 🚩",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon server.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +18,11 @@
   "bugs": {
     "url": "https://github.com/hussainkazarani/pathless-trial/issues"
   },
-  "homepage": "https://github.com/hussainkazarani/pathless-trial#readme"
+  "homepage": "https://github.com/hussainkazarani/pathless-trial#readme",
+  "dependencies": {
+    "dotenv": "^17.1.0",
+    "nodemon": "^3.1.10",
+    "pg": "^8.16.3",
+    "socket.io": "^4.8.1"
+  }
 }

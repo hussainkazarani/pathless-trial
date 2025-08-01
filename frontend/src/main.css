@@ -1,17 +1,57 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 html,
 body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
 }
 
 #canvas {
-    position: absolute;
-    background-color: #353535;
+  position: absolute;
+  background-color: white;
+}
+
+@font-face {
+  font-family: "VCR";
+  src: url("/assets/fonts/vcr-osd-mono.ttf") format("truetype");
+  font-display: swap;
+}
+
+.popup-screen {
+  position: fixed;
+  /* background-color: rgba(0, 0, 0, 0); */
+  /* opacity: 1; */
+  background-color: rgba(0, 0, 0, 0.5);
+  height: 100%;
+  width: 100%;
+  backdrop-filter: blur(5px);
+  display: flex;
+}
+
+.popup-menu {
+  background-color: white;
+  margin: auto; /*or flexbox centering*/
+}
+
+.hidden {
+  /* background-color: rgba(0, 0, 0, 0); */
+  pointer-events: none;
+  display: none;
+  /* opacity: 0; */
+  /* transition: opacity 10s ease 0; */
+}
+
+.creator-only {
+  display: none;
+}
+
+.creator-only.show {
+  display: block;
+  position: absolute;
+  right: 0;
 }

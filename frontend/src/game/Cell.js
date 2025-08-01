@@ -9,18 +9,20 @@ export class Cell {
     this.visited = false;
     this.color = "#FFFCF2";
   }
-
-  draw(ctx, currentCell) {
-    this.#changeCellColor(currentCell);
+  // draw(ctx, currentCell) {
+  draw(ctx) {
+    this.#changeCellColor();
     this.#drawCell(ctx);
     this.#drawCellWalls(ctx);
   }
 
-  #changeCellColor(currentCell) {
-    if (this == currentCell) {
-      // this.color = '#403D39';
-      this.color = "#CCC5B9";
-    } else if (this.visited) this.color = "#CCC5B9";
+  //   #changeCellColor(currentCell) {
+  // if (this == currentCell) {
+  //   // this.color = '#403D39';
+  //   this.color = "#CCC5B9";
+  // } else
+  #changeCellColor() {
+    if (this.visited) this.color = "#CCC5B9";
     else this.color = "#FFFCF2"; //not really needed since it has default color in class
   }
 
