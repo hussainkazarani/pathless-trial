@@ -218,7 +218,7 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(port, async () => {
+server.listen(port, "0.0.0.0", async () => {
   con();
 });
 
