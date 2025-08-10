@@ -44,11 +44,16 @@ const server = http.createServer(async (req, res) => {
   let contentType = "text/html";
 
   // base url and other urls
-  if (req.url === "/") {
+  //   if (req.url === "/") {
+  //     filePath = path.join(basePath, "frontend", "src", "pages", "home.html");
+  //   } else {
+  //     filePath = path.join(basePath, req.url);
+  //     // console.log(filePath);
+  //   }
+  if (req.url === "/" || req.url === "/game" || req.url === "/game/") {
     filePath = path.join(basePath, "frontend", "src", "pages", "home.html");
   } else {
-    filePath = path.join(basePath, req.url);
-    // console.log(filePath);
+    filePath = path.join(basePath, req.url.replace(/^\/game/, ""));
   }
 
   //if file doesnt exist

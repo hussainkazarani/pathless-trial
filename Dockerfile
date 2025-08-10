@@ -14,7 +14,7 @@ RUN apt clean
 
 # copy package.json and install node module
 WORKDIR /home/app/backend
-COPY package*.json ./
+COPY backend/package*.json ./
 RUN npm install
 
 # set working directory
