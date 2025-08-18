@@ -1,12 +1,34 @@
 <html>
-  <head>
-    <title>Leaderboards</title>
-    <link rel="stylesheet" href="frontend/src/pages/leaderboards.css" />
-  </head>
-  <body>
-    <p>Hellooooo</p>
-    <div id="tempdiv"></div>
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/frontend/src/pages/leaderboards.js"></script>
-  </body>
+    <meta charset="utf8" />
+    <head>
+        <title>Pathless Trails</title>
+        <link rel="stylesheet" href="/frontend/src/pages/leaderboards.css" />
+        <link rel="stylesheet" href="/frontend/src/reset.css" />
+        <link rel="icon" type="image/png" href="/assets/star.png" />
+    </head>
+    <body class="preload">
+        <div class="backbtn"><img src="/assets/other/back2.svg" alt="Back" /></div>
+        <div class="page">
+            <h1 class="header">Leaderboards</h1>
+            <div class="players">
+                <!-- <div class="player-item">
+                    <div class="number">1.</div>
+                    <div class="matter">
+                        <div class="p1">
+                            <p class="name">hussain</p>
+                            <p class="game-played">Games Played: 20</p>
+                        </div>
+                        <div class="p2">
+                            <div class="flag">🚩</div>
+                            <p>20 flags</p>
+                        </div>
+                    </div>
+                </div> -->
+            </div>
+        </div>
+        <!-- <div class="temp" id="tempdiv"></div> -->
+        <script src="/frontend/src/transitions.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script type="module" src="/frontend/src/pages/leaderboards.js"></script>
+    </body>
 </html>

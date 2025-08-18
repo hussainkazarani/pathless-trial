@@ -23,16 +23,11 @@ WORKDIR /home/app
 # copy all files
 COPY . .
 
-# # node modules
-# WORKDIR /home/app/backend
-# RUN npm install
-
 # expose port
 EXPOSE 1000
 
 # home directory
-# WORKDIR /home/app
 RUN chmod +x entry.sh
+
 # run server
-# CMD ["bash","-c","cd backend && npm start"]
 CMD ["./entry.sh"]

@@ -1,18 +1,31 @@
 <html>
-  <head>
-    <title>Game Home</title>
-    <link rel="stylesheet" href="/frontend/src/pages/home.css" />
-  </head>
-  <body>
-    <h2 id="heading">Welcome To Pathless Trails!</h2>
-    <div id="namebox">
-      <input type="text" id="username" placeholder="Enter your name" />
-      <div id="error-message"></div>
-    </div>
-
-    <br />
-    <button id="play-button">Play Game</button>
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="module" src="/frontend/src/pages/home.js"></script>
-  </body>
+    <head>
+        <title>Pathless Trails</title>
+        <link rel="stylesheet" href="/frontend/src/pages/home.css" />
+        <link rel="stylesheet" href="/frontend/src/reset.css" />
+        <link rel="icon" type="image/png" href="/assets/star.png" />
+    </head>
+    <body class="preload">
+        <div class="page">
+            <div class="content">
+                <h2 class="container__heading">Welcome To Pathless Trails!</h2>
+                <div class="container">
+                    <div class="container__namebox">
+                        <input
+                            type="text"
+                            class="namebox"
+                            id="player-name"
+                            placeholder="Enter your name"
+                            autocomplete="off"
+                            autocapitalize="off"
+                        />
+                    </div>
+                    <button class="btn">Play Game</button>
+                </div>
+            </div>
+        </div>
+        <script src="/frontend/src/transitions.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script type="module" src="/frontend/src/pages/home.js"></script>
+    </body>
 </html>

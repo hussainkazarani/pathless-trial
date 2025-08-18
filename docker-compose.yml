@@ -1,25 +1,17 @@
-# docker run -it --name trails-db -p 5432:5432 pathless-db
-# docker run -it --name trails-node -p 1000:1000 -v $(pwd):/home/app pathless-node
-
-# version: "3.8"
+# docker run -it --name trails-db pathless-db
+# docker run -it --name trails-node -p 1000:1000
 
 services:
-  custom-postgres:
-    container_name: postgres-db
-    build:
-      context: ./database
-    # ports:
-    #   - "5432:5432"
+    custom-postgres:
+        container_name: postgres-db
+        build:
+            context: ./database
 
-  custom-node:
-    container_name: node-server
-    build:
-      context: .
-    ports:
-      - "80:1000"
-    # volumes:
-    #   - type: bind
-    #     source: .
-    #     target: /home/app
-    depends_on:
-      - custom-postgres
+    custom-node:
+        container_name: node-server
+        build:
+            context: .
+        ports:
+            - '80:1000'
+        depends_on:
+            - custom-postgres

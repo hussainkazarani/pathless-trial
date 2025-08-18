@@ -37,4 +37,3 @@ EXPOSE 5432
 
 # run on startup
 CMD ["bash","-c","service postgresql start && sleep infinity"]
-#  && psql -U judge -d pathless_trails

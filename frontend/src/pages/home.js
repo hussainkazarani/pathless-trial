@@ -1,63 +1,51 @@
 const socket = io();
 
-const playBtn = document.getElementById("play-button");
-// const nameBtn = document.getElementById("choose-name");
-const input = document.getElementById("username");
-const nameOfUser = localStorage.getItem("username");
-const errorDiv = document.getElementById("error-message");
-let username = "";
+const playBtn = document.querySelector('.btn');
+const input = document.getElementById('player-name');
+const input_class = document.querySelector('.namebox');
+const nameOfUser = localStorage.getItem('username');
+const page = document.querySelector('.page');
+let username = '';
 let isButtonClick = false;
 
-errorDiv.style.display = "none";
-
-window.addEventListener("load", () => {
-  localStorage.removeItem("username");
-  localStorage.removeItem("room");
+window.addEventListener('load', () => {
+    if (localStorage.getItem('username')) {
+        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('username') }));
+        localStorage.clear();
+    }
 });
 
-if (nameOfUser) {
-  input.value = nameOfUser;
-  username = nameOfUser;
-}
-
-input.addEventListener("input", () => {
-  if (input.value.length > 0) {
-    isButtonClick = false;
-    socket.emit("check-username", input.value);
-  }
+input.addEventListener('input', () => {
+    if (input.value.length == 0) {
+        input_class.classList.remove('success');
+        input_class.classList.remove('error');
+    }
+    if (input.value.length > 0) {
+        isButtonClick = false;
+        socket.emit('check-username', input.value);
+    }
 });
 
-playBtn.addEventListener("click", () => {
-  if (input.value.length > 0) {
-    isButtonClick = true;
-    socket.emit("check-username", input.value);
-
-    // username = input.value;
-  }
+playBtn.addEventListener('click', () => {
+    if (input.value.length > 0) {
+        isButtonClick = true;
+        socket.emit('check-username', input.value);
+        // username = input.value;
+    }
 });
 
-socket.on("username-taken", () => {
-  errorDiv.textContent = "Username is taken!";
-  errorDiv.style.border = "2px solid red";
-  errorDiv.style.backgroundColor = "#EF8683";
-  errorDiv.style.display = "block";
+socket.on('username-taken', () => {
+    input_class.classList.remove('success');
+    input_class.classList.add('error');
 });
 
-socket.on("username-available", () => {
-  errorDiv.textContent = "Username is Available!!";
-  errorDiv.style.border = "2px solid green";
-  errorDiv.style.backgroundColor = "#E1FAC2";
-  errorDiv.style.display = "block";
-  if (isButtonClick) {
-    localStorage.setItem("username", input.value);
-    window.location.href = "/frontend/src/pages/rooms.html";
-  }
+socket.on('username-available', () => {
+    input_class.classList.remove('error');
+    input_class.classList.add('success');
+    if (isButtonClick) {
+        localStorage.setItem('username', input.value);
+        console.log('Welcome! ' + username);
+        localStorage.setItem('playerToken', input.value);
+        navigateWithFade('/frontend/src/pages/rooms.html');
+    }
 });
-
-// nameBtn.addEventListener("click", () => {
-//   if (input.value.length > 0) {
-//     username = input.value;
-//     localStorage.setItem("username", username);
-//     console.log("Welcome! " + username);
-//   }
-// });
