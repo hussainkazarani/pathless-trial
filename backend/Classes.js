@@ -5,8 +5,7 @@ export class Cell {
         this.y = y; //row
         this.size = 35;
 
-        //top,right,bottom,left
-        this.walls = [true, true, true, true];
+        this.walkable = false;
         this.visited = false;
         this.color = '#FFFCF2';
     }

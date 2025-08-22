@@ -90,7 +90,7 @@ export let animationID;
 
 socket.on('maze-data', (allStates) => {
     // create maze and load data
-    maze = new Maze(20, 20);
+    maze = new Maze(20, 20); //CHANGE TO DYNAMIC
     maze.loadData(allStates.maze.cellsMatrix);
 
     // save the maze in a buffer and draw maze
@@ -104,7 +104,7 @@ socket.on('maze-data', (allStates) => {
     if (maze.cellsMatrix && maze.cellsMatrix.length > 0) {
         // initialize game objects
         collisionManager = new CollisionManager(maze);
-        flag = new Flag(maze);
+        // flag = new Flag(maze);
         player = new Player(maze, collisionManager);
         camera = new CameraManager(canvas, maze, 3);
         instanceState = new InstanceState(player, username, timer);
@@ -129,9 +129,9 @@ function animate() {
     //   camera.followPlayer(player);
     //   camera.applyTransform(ctx);
     ctx.drawImage(buffer, 0, 0); //Blit
-    if (flag) {
-        flag.draw(ctx); //CHANGE
-    }
+    // if (flag) {
+    //     flag.draw(ctx); //CHANGE
+    // }
 
     if (player) {
         //   player.draw(ctx);
@@ -152,10 +152,10 @@ function animate() {
         ctx.fillText(player, playerData.x, playerData.y - 5);
     });
 
-    collisionManager.checkFlagCollision(player, flag.currentFlags);
+    // collisionManager.checkFlagCollision(player, flag.currentFlags);
     //   camera.resetTransform(ctx);
     hud.drawTimerUI(ctx);
-    hud.drawPlayerFlags(ctx);
+    // hud.drawPlayerFlags(ctx);
     animationID = requestAnimationFrame(animate);
 }
 

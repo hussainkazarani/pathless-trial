@@ -6,28 +6,19 @@ export class CollisionManager {
         this.cellSize = this.maze.cellsMatrix[0][0].size;
     }
 
-    getCurrentCell(x, y) {
-        const col = Math.floor(x / this.cellSize);
-        const row = Math.floor(y / this.cellSize);
+    getCell() {}
 
-        return this.maze.cellsMatrix[row][col];
-    }
+    checkCollision(x, y, playerSize, cellSize) {
+        let corners = {
+            topLeft: { x: x, y: y },
+            topRight: { x: x + playerSize, y: y },
+            bottomLeft: { x: x, y: y + playerSize },
+            bottomRight: { x: x + playerSize, y: y + playerSize },
+        };
 
-    canMoveTo(player, direction) {
-        switch (direction) {
-            case 'top': {
-                return !player.playerCurrentCell.walls[0];
-            }
-            case 'right': {
-                return !player.playerCurrentCell.walls[1];
-            }
-            case 'down': {
-                return !player.playerCurrentCell.walls[2];
-            }
-            case 'left': {
-                return !player.playerCurrentCell.walls[3];
-            }
-        }
+        // if (keys.up) {
+        //     return;
+        // }
     }
 
     checkFlagCollision(player, flags) {

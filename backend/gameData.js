@@ -112,6 +112,7 @@ function addMazeDataToRoom(room, maze) {
             cellsMatrix: maze.cellsMatrix,
         },
     };
+    // console.log(JSON.stringify(gameData.rooms[room].gameState, null, 2));
 }
 
 export function checkIfCreator(username, room) {
@@ -120,11 +121,11 @@ export function checkIfCreator(username, room) {
 }
 
 export function createFlagsData(room, amt = 10) {
-    const game = gameData.rooms[room].gameState;
-    const flag = new Flag(game.maze, amt);
-    let allFlagsArray = flag.createPositions();
-    let currentFlags = choosePositions(2, allFlagsArray);
-    addFlagDataToRoom(room, allFlagsArray, currentFlags);
+    // const game = gameData.rooms[room].gameState;
+    // const flag = new Flag(game.maze, amt);
+    // let allFlagsArray = flag.createPositions();
+    // let currentFlags = choosePositions(2, allFlagsArray);
+    // addFlagDataToRoom(room, allFlagsArray, currentFlags);
 }
 
 function choosePositions(amount, allFlags) {
