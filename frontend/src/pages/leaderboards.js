@@ -1,13 +1,23 @@
 const socket = io();
 const playersDiv = document.querySelector('.players');
+const username = localStorage.getItem('playerToken');
+let internalNavigation = false;
 
 window.addEventListener('load', () => {
-    socket.emit('get-leaderboards');
+    if (username == null) {
+        redirectToHome();
+        return;
+    }
+    socket.emit('other:set-backend-username', username);
+    socket.emit('leaderboard:get');
 });
 
-socket.on('send-leaderboards', (data) => {
+socket.on('leaderboard:data', (data) => {
+    console.log(`(F) Received leaderboards`);
+
     // Clear previous content
     playersDiv.innerHTML = '';
+    const currentUser = localStorage.getItem('playerToken');
 
     data.forEach((player, index) => {
         // player-item container
@@ -60,32 +70,53 @@ socket.on('send-leaderboards', (data) => {
         playerItem.appendChild(numberDiv);
         playerItem.appendChild(matterDiv);
 
+        // highlight if current user
+        if (player.username === currentUser) {
+            numberDiv.style.color = 'green';
+            nameP.style.color = 'green';
+            nameP.style.fontWeight = 'bold';
+        }
+
         // append to players container
         playersDiv.appendChild(playerItem);
     });
 });
 
 document.querySelector('.backbtn').addEventListener('click', () => {
-    if (checkLocalStorage()) navigateWithFade('/frontend/src/pages/rooms.html');
+    internalNavigation = true;
+    if (verifyPlayer()) navigateWithFade('/frontend/src/pages/rooms.html');
 });
 
 window.addEventListener('beforeunload', (event) => {
     // Send a signal to the server to remove the player
     if (!internalNavigation) {
-        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('username') }));
+        console.log('Removed LocalStorage in leaderboards');
+        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('playerToken') }));
         localStorage.clear();
-        window.location.replace('/frontend/src/pages/home.html');
     }
 });
 
-function checkLocalStorage() {
-    const token = localStorage.getItem('playerToken'); // fetch fresh
+// Verify the LocalStorage and backend value of username
+async function verifyPlayer() {
+    // no token
+    const token = localStorage.getItem('playerToken');
     if (!token) {
-        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('username') }));
-        localStorage.clear();
-        window.location.replace('/frontend/src/pages/home.html');
+        redirectToHome();
         return false;
     }
-    console.log('Player token found:', token);
+
+    // backend check with callback
+    socket.emit('player:verify-backend', token, (backendUsername, exists) => {
+        if (!exists) {
+            console.log(`Backend username is ${backendUsername} so its ${exists}`);
+            navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: backendUsername }));
+            redirectToHome();
+        }
+    });
     return true;
+}
+
+function redirectToHome() {
+    localStorage.clear();
+    window.location.replace('/frontend/src/pages/home.html');
 }

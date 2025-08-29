@@ -2,17 +2,24 @@ const socket = io();
 
 const p1Elements = document.getElementsByClassName('p1');
 const p2Elements = document.getElementsByClassName('p2');
-const username = localStorage.getItem('username');
 
 const p1 = p1Elements.length > 0 ? p1Elements[0] : null;
 const p2 = p2Elements.length > 0 ? p2Elements[0] : null;
+let internalNavigation = false;
 
-addEventListener('load', () => {
+window.addEventListener('load', () => {
+    const username = localStorage.getItem('playerToken');
+    if (username == null) {
+        redirectToHome();
+        return;
+    }
     if (!p1 && !p2) return;
-    socket.emit('get-stats', username);
+    socket.emit('other:set-backend-username', username);
+    socket.emit('player-stats:get', username);
 });
 
-socket.on('send-stats', (data) => {
+socket.on('player-stats:data', (data) => {
+    console.log(`(F) Received player statistics`);
     // PROFILE STATS
     if (p1) {
         p1.innerHTML = ''; // clear previous content
@@ -72,26 +79,40 @@ socket.on('send-stats', (data) => {
 });
 
 document.querySelector('.backbtn').addEventListener('click', () => {
-    if (checkLocalStorage()) navigateWithFade('/frontend/src/pages/rooms.html');
+    internalNavigation = true;
+    if (verifyPlayer()) navigateWithFade('/frontend/src/pages/rooms.html');
 });
 
+// Send a signal to the server to remove the player
 window.addEventListener('beforeunload', (event) => {
-    // Send a signal to the server to remove the player
     if (!internalNavigation) {
-        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('username') }));
+        console.log('Removed LocalStorage in player statistics');
+        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('playerToken') }));
         localStorage.clear();
-        window.location.replace('/frontend/src/pages/home.html');
     }
 });
 
-function checkLocalStorage() {
-    const token = localStorage.getItem('playerToken'); // fetch fresh
+// Verify the LocalStorage and backend value of username
+async function verifyPlayer() {
+    // no token
+    const token = localStorage.getItem('playerToken');
     if (!token) {
-        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('username') }));
-        localStorage.clear();
-        window.location.replace('/frontend/src/pages/home.html');
+        redirectToHome();
         return false;
     }
-    console.log('Player token found:', token);
+
+    // backend check with callback
+    socket.emit('player:verify-backend', token, (backendUsername, exists) => {
+        if (!exists) {
+            console.log(`Backend username is ${backendUsername} so its ${exists}`);
+            navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: backendUsername }));
+            redirectToHome();
+        }
+    });
     return true;
+}
+
+function redirectToHome() {
+    localStorage.clear();
+    window.location.replace('/frontend/src/pages/home.html');
 }

@@ -1,16 +1,18 @@
-const socket = io();
+import { validateName } from '../transitions.js';
 
+const socket = io();
 const playBtn = document.querySelector('.btn');
 const input = document.getElementById('player-name');
 const input_class = document.querySelector('.namebox');
 const nameOfUser = localStorage.getItem('username');
 const page = document.querySelector('.page');
-let username = '';
+
 let isButtonClick = false;
 
 window.addEventListener('load', () => {
-    if (localStorage.getItem('username')) {
-        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('username') }));
+    if (localStorage.getItem('playerToken')) {
+        console.log('(F) Cleared LocalStorage in home');
+        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('playerToken') }));
         localStorage.clear();
     }
 });
@@ -20,32 +22,39 @@ input.addEventListener('input', () => {
         input_class.classList.remove('success');
         input_class.classList.remove('error');
     }
-    if (input.value.length > 0) {
+    if (!validateName(input.value.trim())) {
+        input_class.classList.remove('success');
+        input_class.classList.add('error');
+    }
+    if (validateName(input.value.trim())) {
         isButtonClick = false;
-        socket.emit('check-username', input.value);
+        socket.emit('player:check-username', input.value);
     }
 });
 
 playBtn.addEventListener('click', () => {
     if (input.value.length > 0) {
         isButtonClick = true;
-        socket.emit('check-username', input.value);
-        // username = input.value;
+        if (!validateName(input.value.trim())) {
+            input_class.classList.remove('success');
+            input_class.classList.add('error');
+            return;
+        }
+        socket.emit('player:check-username', input.value);
     }
 });
 
-socket.on('username-taken', () => {
+socket.on('player:username-taken', () => {
     input_class.classList.remove('success');
     input_class.classList.add('error');
 });
 
-socket.on('username-available', () => {
+socket.on('player:username-available', () => {
     input_class.classList.remove('error');
     input_class.classList.add('success');
     if (isButtonClick) {
-        localStorage.setItem('username', input.value);
-        console.log('Welcome! ' + username);
         localStorage.setItem('playerToken', input.value);
+        console.log(`(F) LocalStorage for user: ${input.value}`);
         navigateWithFade('/frontend/src/pages/rooms.html');
     }
 });

@@ -1,57 +1,121 @@
-import { sendFlagCollision } from '../main.js';
+import config from '../../../shared/config.js';
 
 export class CollisionManager {
-    constructor(maze) {
+    constructor(maze, flagManager) {
         this.maze = maze;
-        this.cellSize = this.maze.cellsMatrix[0][0].size;
+        this.flagManager = flagManager;
     }
 
-    getCell() {}
+    // ======== FLAG COLLISION =========
+    checkFlagCollision(playerX, playerY, playerSize) {
+        // Check if any corner of the player is colliding with a flag
+        const corners = [
+            { x: playerX, y: playerY }, // top-left
+            { x: playerX + playerSize - 1, y: playerY }, // top-right
+            { x: playerX, y: playerY + playerSize - 1 }, // bottom-left
+            { x: playerX + playerSize - 1, y: playerY + playerSize - 1 }, // bottom-right
+        ];
 
-    checkCollision(x, y, playerSize, cellSize) {
-        let corners = {
-            topLeft: { x: x, y: y },
-            topRight: { x: x + playerSize, y: y },
-            bottomLeft: { x: x, y: y + playerSize },
-            bottomRight: { x: x + playerSize, y: y + playerSize },
-        };
+        for (const corner of corners) {
+            const col = Math.floor(corner.x / config.cellSize);
+            const row = Math.floor(corner.y / config.cellSize);
 
-        // if (keys.up) {
-        //     return;
-        // }
-    }
+            const flagIndex = this.flagManager.activeFlags.findIndex((flag) => flag.row === row && flag.col === col);
 
-    checkFlagCollision(player, flags) {
-        if (!flags.length) return;
-
-        let playerSize = player.playerSize;
-        let cellSize = this.maze.cellsMatrix[0][0].size;
-
-        let playerBounds = {
-            lowX: player.x,
-            lowY: player.y,
-            highX: player.x + playerSize,
-            highY: player.y + playerSize,
-        };
-
-        for (let i = 0; i < flags.length; i++) {
-            let flag = flags[i];
-            let flagBounds = {
-                lowX: flag.x * cellSize,
-                lowY: flag.y * cellSize,
-                //here the multiplication is to get the correct place in grid, then to get the right end of flag
-                highX: flag.x * cellSize + cellSize,
-                highY: flag.y * cellSize + cellSize,
-            };
-
-            if (
-                playerBounds.highX >= flagBounds.lowX &&
-                playerBounds.lowX <= flagBounds.highX &&
-                playerBounds.highY >= flagBounds.lowY &&
-                playerBounds.lowY <= flagBounds.highY
-            ) {
-                sendFlagCollision(i);
+            if (flagIndex !== -1) {
+                const collectedFlag = this.flagManager.activeFlags.splice(flagIndex, 1)[0];
+                console.log('Flag collected!');
+                return collectedFlag;
             }
         }
+
+        return false;
+    }
+
+    // ======== MAZE COLLISION =========
+    canMove(x, y) {
+        return this.isPositionWalkable(x, y);
+    }
+
+    isPositionWalkable(x, y) {
+        // Check all four corners
+        const topLeft = this.isPointWalkable(x, y);
+        const topRight = this.isPointWalkable(x + config.playerSize - 1, y); // -1 is to not go overbound to next cell
+        const bottomLeft = this.isPointWalkable(x, y + config.playerSize - 1);
+        const bottomRight = this.isPointWalkable(x + config.playerSize - 1, y + config.playerSize - 1);
+
+        // All corners must be walkable
+        return topLeft && topRight && bottomLeft && bottomRight;
+    }
+
+    isPointWalkable(pointX, pointY) {
+        const col = Math.floor(pointX / config.cellSize);
+        const row = Math.floor(pointY / config.cellSize);
+        return this.isWalkable(col, row);
+    }
+
+    isWalkable(col, row) {
+        if (row < 0 || row >= this.maze.rows || col < 0 || col >= this.maze.columns) return false;
+        return this.maze.cellsMatrix[row][col].walkable;
+    }
+
+    // ======== COLLISION ADJUSTMENTS =========
+    getCollisionAdjustedPosition(direction, oldPos, newPos, otherAxis) {
+        switch (direction) {
+            case 'right':
+                return this.adjustRightMovement(oldPos, newPos, otherAxis);
+            case 'left':
+                return this.adjustLeftMovement(oldPos, newPos, otherAxis);
+            case 'down':
+                return this.adjustDownMovement(oldPos, newPos, otherAxis);
+            case 'up':
+                return this.adjustUpMovement(oldPos, newPos, otherAxis, config.playerSize);
+            default:
+                return newPos;
+        }
+    }
+
+    adjustRightMovement(oldX, newX, y) {
+        // Get the column of the right edge from the safe old position
+        const oldRightCol = Math.floor((oldX + config.playerSize - 1) / config.cellSize);
+
+        // Calculate the maximum x position that keeps player within walkable area
+        // This ensures both top-right and bottom-right corners stay in walkable cells
+        const maxX = (oldRightCol + 1) * config.cellSize - config.playerSize;
+
+        return maxX;
+    }
+
+    adjustLeftMovement(oldX, newX, y) {
+        // Get the column of the left edge from the safe old position
+        const oldLeftCol = Math.floor(oldX / config.cellSize);
+
+        // Calculate the minimum x position that keeps player within walkable area
+        // This ensures both top-left and bottom-left corners stay in walkable cells
+        const minX = oldLeftCol * config.cellSize;
+
+        return minX;
+    }
+
+    adjustDownMovement(oldY, newY, x) {
+        // Get the row of the bottom edge from the safe old position
+        const oldBottomRow = Math.floor((oldY + config.playerSize - 1) / config.cellSize);
+
+        // Calculate the maximum y position that keeps player within walkable area
+        // This ensures both bottom-left and bottom-right corners stay in walkable cells
+        const maxY = (oldBottomRow + 1) * config.cellSize - config.playerSize;
+
+        return maxY;
+    }
+
+    adjustUpMovement(oldY, newY, x) {
+        // Get the row of the top edge from the safe old position
+        const oldTopRow = Math.floor(oldY / config.cellSize);
+
+        // Calculate the minimum y position that keeps player within walkable area
+        // This ensures both top-left and top-right corners stay in walkable cells
+        const minY = oldTopRow * config.cellSize;
+
+        return minY;
     }
 }

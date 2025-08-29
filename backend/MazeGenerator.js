@@ -24,7 +24,7 @@ export class MazeGenerator {
             for (let x = 0; x < columns; x++) {
                 const cell = this.maze.cellsMatrix[y][x];
                 if (cell) {
-                    cell.walkable = Math.random() < 0.5; // 50% chance walkable
+                    cell.walkable = Math.random() < 0.7; // 70% chance walkable
                 }
             }
         }

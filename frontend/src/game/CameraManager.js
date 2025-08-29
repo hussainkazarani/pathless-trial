@@ -1,8 +1,9 @@
+import config from '../../../shared/config.js';
+
 export class CameraManager {
-    constructor(canvas, maze, zoomLevel = 2) {
+    constructor(canvas, zoomLevel = 2) {
         this.zoom = zoomLevel;
         this.canvas = canvas;
-        this.maze = maze;
     }
 
     applyTransform(ctx) {
@@ -18,8 +19,8 @@ export class CameraManager {
     followPlayer(player) {
         const screenWidth = window.innerWidth;
         const screenHeight = window.innerHeight;
-        const mazeWidth = this.maze.columns * this.maze.cellsMatrix[0][0].size;
-        const mazeHeight = this.maze.rows * this.maze.cellsMatrix[0][0].size;
+        const mazeWidth = config.cols * config.cellSize;
+        const mazeHeight = config.rows * config.cellSize;
         // console.log("screen - ", screenWidth, " , ", screenHeight, "\nmaze - ", mazeWidth, " , ", mazeHeight);
 
         const centerX = this.canvas.width / 2;

@@ -1,48 +1,72 @@
 import { keys } from '../ui/input/keybindings.js';
+import config from '../../../shared/config.js';
 
 export class Player {
-    constructor(maze, collisionManager) {
-        this.cellSize = maze.cellsMatrix[0][0].size;
-        this.collisionManager = collisionManager;
-
-        // default values
-        this.x = 0;
-        this.y = 0;
-        this.color = '#EB5E28';
-        this.speed = 10;
-        this.playerSize = 35;
-        this.flags = 0;
-        this.playerCurrentCell = null;
-    }
-
-    loadData(playerData) {
-        this.x = playerData.x;
-        this.y = playerData.y;
-        this.playerSize = playerData.size;
-        this.flags = playerData.flags;
-        this.color = playerData.color;
-        this.speed = playerData.speed;
-        this.playerCurrentCell = playerData.currentCell;
-    }
-
-    updateFlagsInPlayer(newFlags) {
-        this.flags = newFlags;
+    constructor(currentPlayer) {
+        this.x = currentPlayer.x;
+        this.y = currentPlayer.y;
+        this.flagsCollected = currentPlayer.flagsCollected;
+        this.color = currentPlayer.color;
+        this.speed = config.playerSpeed;
+        this.playerSize = config.playerSize;
+        this.collectedFlags = []; // only for sending to backend
     }
 
     draw(ctx) {
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.playerSize, this.playerSize);
+        ctx.fillStyle = 'white';
+        ctx.font = '12px Outfit';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        const text = localStorage.getItem('playerToken');
+
+        ctx.strokeText(text, this.x + this.playerSize / 2, this.y - 5);
+        ctx.fillText(text, this.x + this.playerSize / 2, this.y - 5);
     }
 
-    updateCurrentCell() {}
+    getState() {
+        return { x: this.x, y: this.y, flagsCollected: this.flagsCollected, color: this.color };
+    }
 
-    update() {
-        this.collisionManager.checkCollision(this.x, this.y, this.playerSize, this.cellSize);
+    // Instead of moving directly, just propose a move
+    getProposedMove() {
+        let dx = 0;
+        let dy = 0;
 
-        // boundaries
-        const maxX = this.collisionManager.maze.columns * this.cellSize - this.playerSize;
-        const maxY = this.collisionManager.maze.rows * this.cellSize - this.playerSize;
-        this.x = Math.max(0, Math.min(this.x, maxX));
-        this.y = Math.max(0, Math.min(this.y, maxY));
+        // Store current position as old position before calculating new one
+        this.oldX = this.x;
+        this.oldY = this.y;
+
+        // Calculate proposed movement based on key inputs
+        if (keys.up) dy -= this.speed;
+        if (keys.down) dy += this.speed;
+        if (keys.left) dx -= this.speed;
+        if (keys.right) dx += this.speed;
+
+        const moved = dx !== 0 || dy !== 0;
+
+        return {
+            newX: this.x + dx,
+            newY: this.y + dy,
+            oldX: this.oldX,
+            oldY: this.oldY,
+            moved: moved,
+        };
+    }
+
+    addCollectedFlag(flag) {
+        this.collectedFlags.push(flag);
+    }
+
+    getLastCollectedFlag() {
+        return this.collectedFlags.length > 0 ? this.collectedFlags[this.collectedFlags.length - 1] : null;
+    }
+
+    // Only set position if allowed
+    setPosition(x, y) {
+        this.x = x;
+        this.y = y;
     }
 }

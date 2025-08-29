@@ -1,33 +1,48 @@
+import config from '../../../shared/config.js';
 import { socket } from '../../socket.js';
+import { validateName } from '../transitions.js';
 
-// export const usernameFromBrowser = localStorage.getItem('username');
 const createBtn = document.getElementById('create-game');
 const inputRoom = document.getElementById('input-create-game');
 const activity = document.querySelector('.online-players');
-// let localStorageUsername = localStorage.getItem('username');
 let resetTimeout;
 let internalNavigation = false;
 
 createBtn.addEventListener('click', () => {
     internalNavigation = true;
-    if (checkLocalStorage()) {
+    if (verifyPlayer()) {
         if (inputRoom.value.length > 0) {
-            socket.emit('check-room-creation', inputRoom.value); //here
+            if (!validateName(inputRoom.value.trim())) {
+                inputRoom.style.border = '2px solid #8f3d3d';
+                inputRoom.style.backgroundColor = '#e0b8b8';
+                // remove after 3 seconds
+                clearTimeout(resetTimeout);
+                resetTimeout = setTimeout(() => {
+                    inputRoom.style.border = '';
+                    inputRoom.style.backgroundColor = '';
+                }, 3000);
+                return;
+            }
+            socket.emit('room:check-availability', inputRoom.value);
         }
     }
 });
 
 window.addEventListener('load', () => {
-    if (checkLocalStorage()) {
-        let localStorageUsername = localStorage.getItem('username');
-        socket.emit('get-username', localStorageUsername);
-        socket.emit('check-db', localStorageUsername); // DB checks and creates player
-        socket.emit('get-rooms');
-        socket.emit('send-online-activity');
+    let localStorageUsername = localStorage.getItem('playerToken');
+    if (localStorageUsername == null) {
+        redirectToHome();
+        return;
     }
+    socket.emit('player:set-username', localStorageUsername);
+    socket.emit('player:add-to-db');
+    socket.emit('room:get-list');
+    socket.emit('player:get-online-status');
+    // }
 });
 
-socket.on('room-taken', () => {
+socket.on('room:taken', () => {
+    console.log(`(F) Received room status (not available)`);
     inputRoom.style.border = '2px solid #8f3d3d';
     inputRoom.style.backgroundColor = '#e0b8b8';
     clearTimeout(resetTimeout);
@@ -37,17 +52,19 @@ socket.on('room-taken', () => {
     }, 4000);
 });
 
-socket.on('room-available', () => {
-    if (checkLocalStorage()) {
-        let localStorageUsername = localStorage.getItem('username');
-        socket.emit('create-room', localStorageUsername, inputRoom.value);
+socket.on('room:available', () => {
+    if (verifyPlayer()) {
+        console.log(`(F) Received room status (available)`);
+        let localStorageUsername = localStorage.getItem('playerToken');
+        socket.emit('room:create', localStorageUsername, inputRoom.value);
         localStorage.setItem('room', inputRoom.value);
-        console.log('about to join room as creator with roomid - ' + inputRoom.value);
+        console.log('(F) Going to room: ' + inputRoom.value);
         navigateWithFade('/frontend/index.html');
     }
 });
 
-socket.on('online-players', (players) => {
+socket.on('player:set-online-status', (players) => {
+    console.log(`(F) Successfully received online players`);
     activity.innerHTML = '';
     players.forEach((player) => {
         // wrapper for each player
@@ -70,7 +87,8 @@ socket.on('online-players', (players) => {
     });
 });
 
-socket.on('get-games', (rooms) => {
+socket.on('room:set-list', (rooms) => {
+    console.log(`(F) Successfully received rooms list`);
     const cardsDiv = document.querySelector('.cards-grid');
     cardsDiv.innerHTML = '';
 
@@ -91,7 +109,7 @@ socket.on('get-games', (rooms) => {
         const playerCount = document.createElement('p');
         playerCount.className = 'game-numbers';
         playerCount.id = 'game-player';
-        playerCount.textContent = `${rooms[room].players.length}/${rooms[room].maxPlayers}`;
+        playerCount.textContent = `${Object.keys(rooms[room].players).length}/${config.maxPlayers}`;
 
         topRow.appendChild(gameName);
         topRow.appendChild(playerCount);
@@ -100,14 +118,14 @@ socket.on('get-games', (rooms) => {
         const creator = document.createElement('p');
         creator.className = 'game-creator';
         creator.id = 'game-creator';
-        creator.textContent = `Started By: ${rooms[room].players[0]}`;
+        creator.textContent = `Started By: ${rooms[room].creator}`;
 
         const joinBtn = document.createElement('button');
         joinBtn.className = 'game-join';
         joinBtn.id = 'game-join-button';
         joinBtn.textContent = 'Join';
 
-        if (rooms[room].status === 'in-progress') {
+        if (rooms[room].status === 'live') {
             joinBtn.style.backgroundColor = '#b8e0b8';
             joinBtn.style.border = '2px solid #3d8f3d';
             joinBtn.style.color = 'black';
@@ -118,11 +136,11 @@ socket.on('get-games', (rooms) => {
 
         joinBtn.addEventListener('click', () => {
             internalNavigation = true;
-            if (checkLocalStorage()) {
-                let localStorageUsername = localStorage.getItem('username');
-
+            if (verifyPlayer()) {
+                let localStorageUsername = localStorage.getItem('playerToken');
                 localStorage.setItem('room', room);
-                socket.emit('join-room', localStorageUsername, room);
+                console.log(`(F) Going to room: ${room}`);
+                socket.emit('room:join', localStorageUsername, room);
                 navigateWithFade('/frontend/index.html');
             }
         });
@@ -140,37 +158,52 @@ socket.on('get-games', (rooms) => {
 const leaderboardBtn = document.getElementById('leaderboardBtn');
 leaderboardBtn.addEventListener('click', () => {
     internalNavigation = true;
-    if (checkLocalStorage()) navigateWithFade('/frontend/src/pages/leaderboards.html');
+    if (verifyPlayer()) {
+        console.log(`(F) Going to leaderboads`);
+        navigateWithFade('/frontend/src/pages/leaderboards.html');
+    }
 });
 
 const playerBtn = document.getElementById('playerBtn');
 playerBtn.addEventListener('click', () => {
     internalNavigation = true;
-    if (checkLocalStorage()) navigateWithFade('/frontend/src/pages/playerstats.html');
-});
-
-// Redirect on refresh or leave
-// if (performance.getEntriesByType('navigation')[0].type === 'reload') {
-//     window.location.replace('/frontend/src/pages/home.html');
-// }
-
-window.addEventListener('beforeunload', (event) => {
-    // Send a signal to the server to remove the player
-    if (!internalNavigation) {
-        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('username') }));
-        localStorage.clear();
-        window.location.replace('/frontend/src/pages/home.html');
+    if (verifyPlayer()) {
+        console.log(`(F) Going to player statistics`);
+        navigateWithFade('/frontend/src/pages/playerstats.html');
     }
 });
 
-function checkLocalStorage() {
-    const token = localStorage.getItem('playerToken'); // fetch fresh
-    if (!token) {
-        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('username') }));
+// ==== RELOAD ====
+// Send a signal to the server to remove the player
+window.addEventListener('beforeunload', (event) => {
+    if (!internalNavigation) {
+        console.log('Removed LocalStorage in rooms');
+        navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: localStorage.getItem('playerToken') }));
         localStorage.clear();
-        window.location.replace('/frontend/src/pages/home.html');
+    }
+});
+
+// Verify the LocalStorage and backend value of username
+async function verifyPlayer() {
+    // no token
+    const token = localStorage.getItem('playerToken');
+    if (!token) {
+        redirectToHome();
         return false;
     }
-    console.log('Player token found:', token);
+
+    // backend check with callback
+    socket.emit('player:verify-backend', token, (backendUsername, exists) => {
+        if (!exists) {
+            console.log(`Backend username is ${backendUsername} so its ${exists}`);
+            navigator.sendBeacon('/api/remove-player', JSON.stringify({ username: backendUsername }));
+            redirectToHome();
+        }
+    });
     return true;
+}
+
+function redirectToHome() {
+    localStorage.clear();
+    navigateWithFade('/frontend/src/pages/home.html');
 }

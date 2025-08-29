@@ -1,9 +1,10 @@
+import config from '../../../shared/config.js';
 import { Cell } from './Cell.js';
 
 export class Maze {
-    constructor(columns = 20, rows = 20) {
-        this.columns = columns;
-        this.rows = rows;
+    constructor() {
+        this.columns = config.cols;
+        this.rows = config.rows;
         this.cellsMatrix = [];
     }
 
@@ -13,7 +14,7 @@ export class Maze {
             this.cellsMatrix[row] = [];
             for (let col = 0; col < this.columns; col++) {
                 const cellData = mazeData[row][col];
-                const cell = new Cell(cellData.x, cellData.y);
+                const cell = new Cell(cellData.x, cellData.y, `[${row},${col}]`);
                 // mark as walkable if the backend considers it part of the maze path
                 cell.walkable = cellData.walkable ?? false;
                 this.cellsMatrix[row][col] = cell;

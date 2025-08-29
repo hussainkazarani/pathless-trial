@@ -1,9 +1,11 @@
-// BACKEND
+import config from '../shared/config.js';
+
+// BACKEND CLASSES
 export class Cell {
     constructor(x, y) {
         this.x = x; //column
         this.y = y; //row
-        this.size = 35;
+        this.size = config.cellSize;
 
         this.walkable = false;
         this.visited = false;
@@ -12,7 +14,7 @@ export class Cell {
 }
 
 export class Maze {
-    constructor(columns = 20, rows = 20) {
+    constructor(columns, rows) {
         this.columns = columns;
         this.rows = rows;
         this.cellsMatrix = [];
@@ -31,18 +33,20 @@ export class Maze {
 }
 
 export class Flag {
-    constructor(maze, amount) {
-        this.amount = amount;
-        this.maze = maze;
-        this.positions = [];
+    constructor() {
+        this.amount = config.flagAmount;
+        this.url = config.flagURL;
     }
 
-    createPositions() {
-        for (let i = 0; i < this.amount; i++) {
-            const row = Math.floor(Math.random() * this.maze.rows);
-            const col = Math.floor(Math.random() * this.maze.columns);
-            this.positions.push({ x: col, y: row });
+    generateRandomPosition(availableCells) {
+        let positions = [];
+        const pool = [...availableCells]; // copy so we can modify safely
+
+        for (let i = 0; i < this.amount && pool.length > 0; i++) {
+            const index = Math.floor(Math.random() * pool.length);
+            const cell = pool.splice(index, 1)[0]; // remove so it’s not reused
+            positions.push(cell);
         }
-        return this.positions;
+        return positions;
     }
 }

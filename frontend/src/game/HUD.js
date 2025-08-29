@@ -1,22 +1,41 @@
+import { state } from '../modules/state.js';
+
+const timerHUD = new Image();
+const flagHUD = new Image();
+timerHUD.src = '/assets/images/hourglass_ui.png';
+flagHUD.src = '/assets/images/flag_ui.png';
+
+const imgSize = 32;
+
 export class HUD {
-    constructor(instance) {
-        this.instance = instance;
-        // this.timer = instance.timer;
+    constructor() {
+        this.timerHUD = timerHUD;
+        this.flagHUD = flagHUD;
     }
 
     drawTimerUI(ctx) {
-        // ctx.font = '24px VCR';
+        ctx.font = '24px Outfit';
         ctx.fillStyle = 'white';
-        ctx.fillText(`⏱️Timer : ${this.instance.timer}`, 10, 30);
-        // ctx.font = "24px 'Courier New'";
-        // console.log(this.gameState.timer);
+        ctx.textAlign = 'start';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        const text = state.timerDuration != null ? `Timer: ${state.timerDuration}` : 'Timer: -';
+
+        ctx.drawImage(this.timerHUD, 10, 8, imgSize, imgSize);
+        ctx.strokeText(text, 10 + imgSize + 5, 32);
+        ctx.fillText(text, 10 + imgSize + 5, 32);
     }
 
-    drawPlayerFlags(ctx) {
-        // ctx.font = '24px VCR';
+    drawPlayerFlags(ctx, playerFlags) {
+        ctx.font = '24px Outfit';
         ctx.fillStyle = 'white';
-        ctx.fillText(`🚩 : ${this.instance.player.flags}`, 15, 60);
-        // ctx.font = "24px 'Courier New'";
-        // console.log(this.gameState.timer);
+        ctx.textAlign = 'start';
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 3;
+        const text = `Flags: ${playerFlags}`;
+
+        ctx.drawImage(this.flagHUD, 10, 50, imgSize, imgSize);
+        ctx.strokeText(text, 10 + imgSize + 5, 72);
+        ctx.fillText(text, 10 + imgSize + 5, 72);
     }
 }
